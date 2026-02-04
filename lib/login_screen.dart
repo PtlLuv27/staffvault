@@ -1,54 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'auth_service.dart';
-import 'dashboard_screen.dart';
+import 'main.dart';
+import 'set_password_screen.dart'; // New screen required
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(const StaffVaultApp());
-}
-
-class StaffVaultApp extends StatelessWidget {
-  const StaffVaultApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'StaffVault',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-      ),
-      home: const AuthWrapper(),
-    );
-  }
-}
-
-// Unified Authentication Wrapper
-class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
-        }
-        if (snapshot.hasData) {
-          return const DashboardScreen();
-        }
-        return const LoginScreen();
-      },
-    );
-  }
-}
-
-// Integrated Login & Signup Screen
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -126,11 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const CircularProgressIndicator()
               else ...[
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white
-                  ),
+                  style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50), backgroundColor: Colors.blue, foregroundColor: Colors.white),
                   onPressed: _handleAuth,
                   child: Text(_isLoginMode ? "Login" : "Sign Up"),
                 ),
@@ -149,68 +100,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: () async {
                   User? user = await AuthService().signInWithGoogle();
                   if (user != null && mounted) {
-                    Navigator.pushReplacement(
+                    // Logic: Check if password setup is needed
+                    if (!AuthService().hasPassword(user)) {
+                      Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => const SplashScreen(message: "Welcome!"))
-                    );
+                        MaterialPageRoute(builder: (context) => const SetPasswordScreen()),
+                      );
+                    } else {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SplashScreen(message: "Welcome!")),
+                      );
+                    }
                   }
                 },
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// Reusable Splash Screen
-class SplashScreen extends StatefulWidget {
-  final String message;
-  final bool isLoggingOut;
-
-  const SplashScreen({super.key, required this.message, this.isLoggingOut = false});
-
-  @override
-  State<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        if (widget.isLoggingOut) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const AuthWrapper()),
-                (route) => false,
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const DashboardScreen()),
-          );
-        }
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.blue,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.account_balance_wallet, size: 100, color: Colors.white),
-            const SizedBox(height: 20),
-            Text(widget.message, style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 20),
-            const CircularProgressIndicator(color: Colors.white),
-          ],
         ),
       ),
     );

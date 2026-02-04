@@ -4,7 +4,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        // Add this line for Firebase
+        // Essential for Firebase and Google Sign-in integration
         classpath("com.google.gms:google-services:4.4.1")
     }
 }
@@ -16,6 +16,7 @@ allprojects {
     }
 }
 
+// Custom build directory logic to maintain organization
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")
@@ -26,10 +27,12 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+
 subprojects {
     project.evaluationDependsOn(":app")
 }
 
+// Clean task updated for the new build directory structure
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }

@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; //
-import 'package:firebase_auth/firebase_auth.dart'; //
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -48,22 +48,21 @@ class DatabaseHelper {
 
   // --- CLOUD SYNC LOGIC ---
 
-  /// Pushes local SQLite data to Firebase Firestore
+  /// Unified Sync: Data stays linked to the Firebase UID
   Future<void> syncToCloud() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return; // Only sync if logged in
+    if (user == null) return;
 
     final firestore = FirebaseFirestore.instance;
-    // Use the unified Firebase UID as the document ID
     final userDoc = firestore.collection('users').doc(user.uid);
 
     final employees = await queryAllEmployees();
 
     for (var emp in employees) {
-      // Sync employee profile
+      // Push Profile to Firestore
       await userDoc.collection('employees').doc(emp['id'].toString()).set(emp);
 
-      // Sync specific attendance logs for this employee
+      // Push Attendance Logs to Firestore
       final attendance = await getAttendanceForEmployee(emp['id']);
       for (var log in attendance) {
         await userDoc
@@ -81,22 +80,20 @@ class DatabaseHelper {
   Future<int> insertEmployee(Map<String, dynamic> row) async {
     final db = await instance.database;
     int id = await db.insert('employees', row);
-    syncToCloud(); // Trigger background sync
+    syncToCloud();
     return id;
   }
 
   Future<int> updateEmployee(int id, Map<String, dynamic> row) async {
     final db = await instance.database;
     int result = await db.update('employees', row, where: 'id = ?', whereArgs: [id]);
-    syncToCloud(); // Trigger background sync
+    syncToCloud();
     return result;
   }
 
   Future<int> deleteEmployee(int id) async {
     final db = await instance.database;
-    int result = await db.delete('employees', where: 'id = ?', whereArgs: [id]);
-    // Note: Cloud deletion could also be handled here
-    return result;
+    return await db.delete('employees', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<List<Map<String, dynamic>>> queryAllEmployees() async {
@@ -116,7 +113,6 @@ class DatabaseHelper {
 
     int result;
     if (existing.isNotEmpty) {
-      // Merge logic: Ensures bonus/loan/note updates don't erase status
       Map<String, dynamic> updateData = Map.of(existing.first);
       updateData.addAll(row);
       result = await db.update('attendance', updateData, where: 'id = ?', whereArgs: [existing.first['id']]);
@@ -125,17 +121,13 @@ class DatabaseHelper {
       result = await db.insert('attendance', row);
     }
 
-    syncToCloud(); // Trigger background sync
+    syncToCloud();
     return result;
   }
 
   Future<Map<String, dynamic>?> getSingleAttendance(int empId, String date) async {
     final db = await instance.database;
-    final results = await db.query(
-      'attendance',
-      where: 'employeeId = ? AND date = ?',
-      whereArgs: [empId, date],
-    );
+    final results = await db.query('attendance', where: 'employeeId = ? AND date = ?', whereArgs: [empId, date]);
     return results.isNotEmpty ? results.first : null;
   }
 
@@ -151,10 +143,6 @@ class DatabaseHelper {
 
   Future<List<Map<String, dynamic>>> getAttendanceForMonth(int empId, String yearMonth) async {
     final db = await instance.database;
-    return await db.query(
-      'attendance',
-      where: 'employeeId = ? AND date LIKE ?',
-      whereArgs: [empId, '$yearMonth%'],
-    );
+    return await db.query('attendance', where: 'employeeId = ? AND date LIKE ?', whereArgs: [empId, '$yearMonth%']);
   }
 }
