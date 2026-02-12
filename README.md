@@ -1,5 +1,7 @@
 # StaffVault: Smart Employee & Salary Manager
 
+[![Download APK](https://img.shields.io/badge/Download-StaffVault%20APK-blue?style=for-the-badge&logo=android)](https://github.com/PtlLuv27/staffvault/releases/download/v1.0.0/staffvault.apk)
+
 **StaffVault** is a robust, offline-first mobile application designed to manage employee attendance, salary calculations, and professional financial reports. Built with a focus on reliability, it ensures your business data is always available locally and securely backed up to the cloud.
 
 
@@ -47,15 +49,14 @@
 
 ## 📥 Installation & Setup
 
-### Prerequisites
-* Flutter SDK (v3.10.0 or higher)
-* Android Studio / VS Code
-* A Firebase Project with `google-services.json`
+### **For Users**
+The easiest way to get started is to download the latest APK directly:
+* [**Download staffvault.apk v1.0.0**](https://github.com/PtlLuv27/staffvault/releases/download/v1.0.0/staffvault.apk)
 
-### Steps to Run
+### **For Developers**
 1.  **Clone the Repository**:
     ```bash
-    git clone [https://github.com/yourusername/staffvault.git](https://github.com/yourusername/staffvault.git)
+    git clone [https://github.com/PtlLuv27/staffvault.git](https://github.com/PtlLuv27/staffvault.git)
     cd staffvault
     ```
 2.  **Install Dependencies**:
@@ -77,5 +78,10 @@ To generate the production file **staffvault.apk**:
     flutter build apk --release
     ```
 2.  Find the file at `build/app/outputs/flutter-apk/app-release.apk` and rename it to `staffvault.apk`.
+
+---
+
+## 🤝 Support
+For issues, feature requests, or contributions, please open an issue in the GitHub repository.
 
 ---
